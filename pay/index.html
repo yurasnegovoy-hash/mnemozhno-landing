@@ -71,7 +71,7 @@ function esc(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','
 let info = null;
 function render() {
   app.innerHTML = `<header><div class="kicker">та самая Шкапуля</div><h1>${esc(info.title)}</h1>
-      <div class="price">${esc(info.price)}</div>${info.discount ? '<p class="note">твоя персональная цена</p>' : ''}</header>
+      <div class="price">${esc(info.price)}</div>${info.upgrade ? '<p class="note">доплата разницы между тарифами, уроки и прогресс остаются</p>' : info.discount ? '<p class="note">твоя персональная цена</p>' : ''}</header>
     <h2>Как удобнее оплатить</h2>
     <div class="methods">${info.methods.map(m => `<button class="m" data-m="${m.id}"><div class="ic">${ICONS[m.id] || ''}</div>
       <div><b>${esc(m.name)}</b><span>${esc(m.sub)}</span></div><div class="arr">›</div></button>`).join('')}</div>

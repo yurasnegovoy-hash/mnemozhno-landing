@@ -207,7 +207,7 @@ function kursBlock(k) {
     html += `</div>`;
   }
   html += `</div>`;
-  if (k.chat || k.channel) html += `<div class="row" style="margin-top:14px">${k.channel ? `<button class="btn ghost" data-link="${esc(k.channel)}">канал</button>` : ''}${k.chat ? `<button class="btn ghost" data-link="${esc(k.chat)}">чат участниц</button>` : ''}</div>`;
+  if (k.chat || k.channel) html += `<div class="row" style="margin-top:14px">${k.channel ? `<button class="btn ghost" data-link="${esc(k.channel)}">канал курса</button>` : ''}${k.chat ? `<button class="btn ghost" data-link="${esc(k.chat)}">чат участниц</button>` : ''}</div>`;
   html += `</div></section>`;
   if (k.upgrades && k.upgrades.length) {
     html += `<section><h2>Хочешь больше поддержки?</h2><div class="card"><div class="small">можно перейти на тариф выше, уроки останутся на своём месте</div><div class="tariffs">`;
@@ -226,7 +226,7 @@ function offerBlock(list) {
 }
 
 function audioItem(a, own, mark) {
-  if (!own) return `<div class="item"><div class="lock">${LOCK}</div><div class="meta"><div class="t">${esc(a.title)}</div><div class="small">практика навсегда</div></div><button class="buy" data-link="${esc(a.buy)}">${rub(a.price)}</button></div>`;
+  if (!own) return `<div class="item"><div class="lock">${LOCK}</div><div class="meta"><div class="t">${esc(a.title)}</div><div class="small">аудиопрактика</div></div><button class="buy" data-link="${esc(a.buy)}">${rub(a.price)}</button></div>`;
   return `<div class="item" data-audio="${esc(a.url)}"><button class="play" aria-label="слушать">${PLAY}</button>
     <div class="meta"><div class="t">${esc(a.title)}${mark ? `<span class="mark ${mark === 'подарок' ? 'soft' : ''}">${esc(mark)}</span>` : ''}</div><div class="small">${esc(a.sub || 'твоя навсегда')}</div><div class="bar"><i></i></div></div></div>`;
 }
@@ -235,11 +235,16 @@ function render(d) {
   document.getElementById('hello').textContent = d.name ? `привет, ${d.name} 🤍` : 'привет 🤍';
   let html = d.kurs ? kursBlock(d.kurs) : offerBlock(d.offer || []);
   const own = d.practices.filter(p => p.own), rest = d.practices.filter(p => !p.own);
-  html += `<section><h2>Мои практики</h2><div class="list">`;
-  html += own.length ? own.map(p => audioItem(p, true, 'куплено ✓')).join('')
-                     : `<div class="small">здесь появятся практики, которые ты заберёшь</div>`;
-  html += `</div></section>`;
-  if (rest.length) html += `<section><h2>Можно забрать</h2><div class="list">${rest.map(p => audioItem(p, false)).join('')}</div></section>`;
+  if (d.kurs) {
+    const kp = d.kurs.days.filter(x => (x.kind || '').startsWith('практика'));
+    if (kp.length) html += `<section><h2>Практики из курса</h2><div class="list">${kp.map(x => x.open
+      ? `<div class="item"><button class="play" data-goday="${x.n}" aria-label="открыть">${PLAY}</button><div class="meta"><div class="t">${esc(x.name)}<span class="mark">в курсе ✓</span></div><div class="small">вечер ${x.n} · ${esc(x.kind)}</div></div></div>`
+      : `<div class="item"><div class="lock">${LOCK}</div><div class="meta"><div class="t">${esc(x.name)}</div><div class="small">откроется в вечер ${x.n}</div></div></div>`).join('')}</div></section>`;
+  }
+  if (own.length) html += `<section><h2>Мои практики</h2><div class="list">${own.map(p => audioItem(p, true, 'куплено ✓')).join('')}</div></section>`;
+  if (rest.length) html += `<section><h2>${own.length ? 'Другие практики Даши' : 'Практики Даши'}</h2>
+    <p class="small" style="margin:-6px 0 12px">покупаются один раз и остаются у тебя навсегда</p>
+    <div class="list">${rest.map(p => audioItem(p, false)).join('')}</div></section>`;
   if (d.gifts.length) html += `<section><h2>Подарки</h2><div class="list">${d.gifts.map(g => audioItem(g, true, 'подарок')).join('')}</div></section>`;
   if (d.club) html += `<section><div class="card center"><div class="script">FEMININE CLUB</div><p class="small">ты внутри клуба</p><button class="btn" data-link="${esc(d.club.link)}">открыть клуб</button></div></section>`;
   html += `<footer><button class="btn ghost" data-link="${esc(d.dasha)}">написать Даше</button></footer>`;
@@ -254,6 +259,12 @@ function stopAudio() {
 app.addEventListener('click', async (e) => {
   const link = e.target.closest('[data-link]');
   if (link) { openLink(link.dataset.link); return; }
+  const go = e.target.closest('[data-goday]');
+  if (go) {
+    const day = document.getElementById('d' + go.dataset.goday);
+    if (day) { toggleDay(day, true); day.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+    return;
+  }
   const allBtn = e.target.closest('[data-openall]');
   if (allBtn) {
     const go = () => {
