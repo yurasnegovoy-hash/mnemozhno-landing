@@ -89,6 +89,8 @@ app.addEventListener('click', async (ev) => {
   document.querySelectorAll('.m').forEach(x => x.classList.remove('busy'));
   b.classList.add('busy');
   b.querySelector('.arr').textContent = '◌';
+  const sub = b.querySelector('span'), subText = sub.textContent;
+  sub.textContent = 'открываю оплату, пару секунд…';
   try {
     const r = await fetch(API + '/api/pay', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({t, method: b.dataset.m})});
     const d = await r.json();
@@ -101,6 +103,7 @@ app.addEventListener('click', async (ev) => {
   }
   b.classList.remove('busy');
   b.querySelector('.arr').textContent = '›';
+  sub.textContent = subText;
 });
 
 (async () => {
