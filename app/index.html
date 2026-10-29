@@ -53,8 +53,34 @@
     font-family: 'Prata', serif; border: 1px solid var(--gold2); color: var(--gold);
   }
   .day.done .num { background: var(--gold); color: var(--bg); border-color: var(--gold); }
-  .day.locked { opacity: .5; }
-  .day.locked .day-head { cursor: default; }
+  .day.locked .day-head { cursor: default; opacity: .62; }
+  .cover { position: relative; aspect-ratio: 16 / 9; overflow: hidden; cursor: pointer; background: var(--card); }
+  .cover { background: radial-gradient(90% 120% at 30% 40%, #6e1628 0%, #3D0B18 45%, #24080F 100%); }
+  .cover .ph { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; padding: 0 22px; }
+  .cover .ph b { font-family: 'Prata', serif; font-weight: 400; font-size: 64px; line-height: 1; color: rgba(232, 201, 138, .9); }
+  .cover .ph span { margin-top: 10px; font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); opacity: .8; }
+  .cover img { position: relative; width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .6s ease; }
+  .day.locked .cover .ph { filter: blur(3px); opacity: .5; }
+  .day:not(.locked) .cover:hover img { transform: scale(1.03); }
+  .day.locked .cover { cursor: default; }
+  .day.locked .cover img { filter: blur(7px) brightness(.5) saturate(.6); transform: scale(1.08); }
+  .badge {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;
+    color: var(--cream); font-size: 13px; font-weight: 600; letter-spacing: .02em;
+  }
+  .badge .ic {
+    width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center;
+    background: rgba(36, 8, 15, .55); border: 1px solid rgba(232, 201, 138, .6); color: var(--gold);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  }
+  .badge .ic svg { width: 20px; height: 20px; }
+  .day.openbox .cover { display: none; }
+  .day.fresh { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(232, 201, 138, .35), 0 10px 30px rgba(0, 0, 0, .35); }
+  .tag-new {
+    position: absolute; left: 12px; top: 12px; background: var(--gold); color: var(--bg);
+    font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; border-radius: 99px; padding: 4px 9px;
+  }
   .day-title { flex: 1; font-weight: 500; }
   .chev { color: var(--gold); transition: transform .2s; }
   .day.openbox .chev { transform: rotate(90deg); }
@@ -145,20 +171,27 @@ function kursBlock(k) {
     <div class="progress"><i style="width:${Math.max(pct, 2)}%"></i></div>
     <div class="small">пройдено ${k.days.filter(d => d.done).length} из ${k.total} · открыто вечеров: ${k.day}${k.next_at ? ' · следующий ' + whenText(k.next_at) : ''}</div>
     <div class="days">`;
+  const freshN = k.days.filter(d => d.open && !d.done).map(d => d.n).pop();
   for (const d of k.days) {
-    const cls = ['day', d.open ? '' : 'locked', d.done ? 'done' : ''].join(' ');
-    html += `<div class="${cls}" data-n="${d.n}">
+    const cls = ['day', d.open ? '' : 'locked', d.done ? 'done' : '', d.n === freshN ? 'fresh' : ''].join(' ');
+    const lockText = d.n === k.day + 1 && k.next_at ? 'откроется ' + whenText(k.next_at) : 'откроется в свой вечер';
+    html += `<div class="${cls}" id="d${d.n}" data-n="${d.n}">
+      <div class="cover"><div class="ph"><b>${d.n}</b><span>вечер ${d.n} из ${k.total}</span></div><img src="${esc(d.img)}" alt="" loading="lazy" onerror="this.remove()">
+        ${d.open
+          ? `<div class="badge"><div class="ic">${PLAY}</div></div>${d.n === freshN ? '<span class="tag-new">новый урок</span>' : ''}`
+          : `<div class="badge"><div class="ic">${LOCK}</div>${esc(lockText)}</div>`}
+      </div>
       <div class="day-head"><div class="num">${d.done ? '✓' : d.n}</div><div class="day-title">${esc(d.title)}</div>
-      <div class="chev">${d.open ? '›' : LOCK}</div></div>`;
+      <div class="chev">${d.open ? '›' : ''}</div></div>`;
     if (d.open) {
       html += `<div class="day-body"><p class="small" style="margin:0 0 10px">${esc(d.text)}</p>
-        ${d.embed ? `<div class="video"><iframe data-src="${esc(d.embed)}" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe></div>` : '<p class="small">видео скоро появится здесь</p>'}
+        ${d.audio ? `<div class="list" style="margin-bottom:12px">${audioItem({title: 'слушать практику', sub: 'лёжа, в наушниках', url: d.audio}, true)}</div>` : d.embed ? `<div class="video"><iframe data-src="${esc(d.embed)}" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe></div>` : '<p class="small">видео скоро появится здесь</p>'}
         <button class="btn ${d.done ? 'ghost' : ''}" data-done="${d.n}" ${d.done ? 'disabled' : ''}>${d.done ? 'пройдено 🤍' : 'отметить пройденным'}</button></div>`;
     }
     html += `</div>`;
   }
   html += `</div>`;
-  if (k.chat) html += `<div style="margin-top:14px"><button class="btn ghost" data-link="${esc(k.chat)}">чат участниц</button></div>`;
+  if (k.chat || k.channel) html += `<div class="row" style="margin-top:14px">${k.channel ? `<button class="btn ghost" data-link="${esc(k.channel)}">канал</button>` : ''}${k.chat ? `<button class="btn ghost" data-link="${esc(k.chat)}">чат участниц</button>` : ''}</div>`;
   html += `</div></section>`;
   if (k.upgrades && k.upgrades.length) {
     html += `<section><h2>Хочешь больше поддержки?</h2><div class="card"><div class="small">можно перейти на тариф выше, уроки останутся на своём месте</div><div class="tariffs">`;
@@ -229,18 +262,29 @@ app.addEventListener('click', async (e) => {
     player.play().catch(stopAudio);
     return;
   }
-  const head = e.target.closest('.day:not(.locked) .day-head');
-  if (head) {
-    const day = head.parentElement;
-    day.classList.toggle('openbox');
-    const fr = day.querySelector('iframe[data-src]');
-    if (fr && !fr.src) fr.src = fr.dataset.src;
-  }
+  const head = e.target.closest('.day:not(.locked) .day-head, .day:not(.locked) .cover');
+  if (head) toggleDay(head.parentElement);
 });
 
+function toggleDay(day, forceOpen) {
+  const open = forceOpen || !day.classList.contains('openbox');
+  day.classList.toggle('openbox', open);
+  const fr = day.querySelector('iframe[data-src]');
+  if (open && fr && !fr.src) fr.src = fr.dataset.src;
+}
+
+let firstLoad = true;
 async function load() {
   try {
     render(await api('/api/me'));
+    // из уведомления бота приходим с #dN: сразу раскрываем этот вечер
+    const m = firstLoad && location.hash.match(/^#d(\d+)$/);
+    firstLoad = false;
+    const day = m && document.getElementById('d' + m[1]);
+    if (day && !day.classList.contains('locked')) {
+      toggleDay(day, true);
+      setTimeout(() => day.scrollIntoView({behavior: 'smooth', block: 'start'}), 150);
+    }
   } catch (err) {
     app.innerHTML = `<div class="state">не получилось открыть кабинет 🤍<br>закрой его и открой снова из бота</div>`;
   }
