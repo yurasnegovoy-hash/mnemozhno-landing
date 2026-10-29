@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Оплата · Шкапуля</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prata&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #24080F;
+    --card: #3D0B18;
+    --line: rgba(232, 201, 138, .2);
+    --gold: #E8C98A;
+    --gold2: #B8914F;
+    --cream: #F7EFE6;
+    --muted: rgba(247, 239, 230, .62);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--cream); }
+  body {
+    font-family: 'Manrope', system-ui, sans-serif; font-size: 15px; line-height: 1.5;
+    background: radial-gradient(120% 60% at 50% -10%, #4a1020 0%, var(--bg) 60%) fixed;
+    min-height: 100vh; padding: 0 16px calc(32px + env(safe-area-inset-bottom));
+  }
+  .wrap { max-width: 460px; margin: 0 auto; }
+  header { padding: 34px 0 6px; text-align: center; }
+  .kicker { font-size: 11px; letter-spacing: .24em; text-transform: uppercase; color: var(--gold); }
+  h1 { font-family: 'Prata', serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 12px 0 6px; }
+  .price { font-family: 'Prata', serif; font-size: 34px; color: var(--gold); margin: 6px 0 0; }
+  .note { color: var(--muted); font-size: 13px; text-align: center; margin: 4px 0 0; }
+  h2 { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin: 30px 0 12px; text-align: center; }
+  .methods { display: flex; flex-direction: column; gap: 10px; }
+  .m {
+    display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; cursor: pointer;
+    font: inherit; color: var(--cream); padding: 16px; border-radius: 16px;
+    border: 1px solid var(--line); background: linear-gradient(180deg, rgba(61, 11, 24, .92), rgba(43, 13, 20, .92));
+    transition: border-color .2s, transform .1s;
+  }
+  .m:active { transform: scale(.99); }
+  .m:hover { border-color: var(--gold2); }
+  .m .ic { flex: 0 0 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: rgba(232, 201, 138, .12); color: var(--gold); }
+  .m .ic svg { width: 22px; height: 22px; }
+  .m b { display: block; font-weight: 600; font-size: 16px; }
+  .m span { display: block; color: var(--muted); font-size: 13px; }
+  .m .arr { margin-left: auto; color: var(--gold); font-size: 20px; }
+  .m.busy { opacity: .6; pointer-events: none; }
+  .m.busy .arr { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .err { margin-top: 16px; padding: 14px; border-radius: 14px; border: 1px solid rgba(232, 120, 120, .4); color: var(--cream); font-size: 14px; display: none; }
+  .err a { color: var(--gold); }
+  .safe { margin-top: 26px; text-align: center; color: var(--muted); font-size: 12px; }
+  .state { padding: 70px 10px; text-align: center; color: var(--muted); }
+  .state a { color: var(--gold); }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="state">загружаю оплату…</div></div>
+<script>
+const API = 'https://200-165-230-69.sslip.io';
+const app = document.getElementById('app');
+const t = new URLSearchParams(location.search).get('t') || '';
+const ICONS = {
+  card: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6 15h4"/></svg>',
+  sbp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>',
+  usd: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c3 3.2 3 15.8 0 19M12 2.5c-3 3.2-3 15.8 0 19"/></svg>'
+};
+function esc(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+let info = null;
+function render() {
+  app.innerHTML = `<header><div class="kicker">та самая Шкапуля</div><h1>${esc(info.title)}</h1>
+      <div class="price">${esc(info.price)}</div>${info.discount ? '<p class="note">твоя персональная цена</p>' : ''}</header>
+    <h2>Как удобнее оплатить</h2>
+    <div class="methods">${info.methods.map(m => `<button class="m" data-m="${m.id}"><div class="ic">${ICONS[m.id] || ''}</div>
+      <div><b>${esc(m.name)}</b><span>${esc(m.sub)}</span></div><div class="arr">›</div></button>`).join('')}</div>
+    <div class="err" id="err"></div>
+    <p class="safe">оплата проходит на защищённой странице lava.top<br>после оплаты доступ сразу придёт в Telegram</p>`;
+}
+function showErr(text) {
+  const e = document.getElementById('err');
+  e.innerHTML = text + (info && info.dasha ? `<br><a href="${esc(info.dasha)}">написать Даше</a>` : '');
+  e.style.display = 'block';
+}
+app.addEventListener('click', async (ev) => {
+  const b = ev.target.closest('[data-m]');
+  if (!b) return;
+  document.querySelectorAll('.m').forEach(x => x.classList.remove('busy'));
+  b.classList.add('busy');
+  b.querySelector('.arr').textContent = '◌';
+  try {
+    const r = await fetch(API + '/api/pay', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({t, method: b.dataset.m})});
+    const d = await r.json();
+    if (d.url) { location.href = d.url; return; }
+    showErr(d.error === 'owned' ? 'это у тебя уже есть 🤍 загляни в бота' :
+            d.error === 'link' ? 'ссылка устарела 🤍 нажми «оплатить» в боте ещё раз' :
+            'не получилось открыть оплату этим способом 🤍 попробуй другой или напиши мне');
+  } catch (e) {
+    showErr('связь прервалась 🤍 попробуй ещё раз');
+  }
+  b.classList.remove('busy');
+  b.querySelector('.arr').textContent = '›';
+});
+
+(async () => {
+  if (!t) { app.innerHTML = '<div class="state">открой оплату по кнопке в боте 🤍<br><br><a href="https://t.me/shkapulyaa_bot">перейти в бота</a></div>'; return; }
+  try {
+    const r = await fetch(API + '/api/pay/info?t=' + encodeURIComponent(t));
+    if (!r.ok) throw new Error(r.status);
+    info = await r.json();
+    render();
+  } catch (e) {
+    app.innerHTML = '<div class="state">ссылка устарела 🤍<br>нажми «оплатить» в боте ещё раз<br><br><a href="https://t.me/shkapulyaa_bot">перейти в бота</a></div>';
+  }
+})();
+</script>
+</body>
+</html>
