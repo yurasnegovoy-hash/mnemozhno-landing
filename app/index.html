@@ -105,7 +105,10 @@
   }
   .play svg { width: 16px; height: 16px; }
   .item .meta { flex: 1; min-width: 0; }
-  .item .t { font-weight: 500; }
+  .item .t { font-weight: 500; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .mark { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; border-radius: 99px; padding: 2px 8px; background: var(--gold); color: var(--bg); }
+  .mark.soft { background: transparent; color: var(--gold); border: 1px solid var(--gold2); }
+  .tariff.mine { border-color: var(--gold); background: rgba(232, 201, 138, .06); }
   .bar { height: 3px; background: rgba(247, 239, 230, .12); border-radius: 99px; margin-top: 8px; overflow: hidden; display: none; }
   .bar i { display: block; height: 100%; width: 0; background: var(--gold); }
   .item.playing .bar { display: block; }
@@ -195,6 +198,7 @@ function kursBlock(k) {
   html += `</div></section>`;
   if (k.upgrades && k.upgrades.length) {
     html += `<section><h2>Хочешь больше поддержки?</h2><div class="card"><div class="small">можно перейти на тариф выше, уроки останутся на своём месте</div><div class="tariffs">`;
+    html += `<div class="tariff mine"><div><b>${esc(k.tariff)}</b><div class="small">уже у тебя</div></div><span class="mark">твой тариф ✓</span></div>`;
     for (const u of k.upgrades) html += `<div class="tariff"><div><b>${esc(u.name)}</b><div class="small">${rub(u.price)}</div></div><button class="buy" data-link="${esc(u.link)}">перейти</button></div>`;
     html += `</div></div></section>`;
   }
@@ -208,10 +212,10 @@ function offerBlock(list) {
   return html + `</div></div></section>`;
 }
 
-function audioItem(a, own) {
+function audioItem(a, own, mark) {
   if (!own) return `<div class="item"><div class="lock">${LOCK}</div><div class="meta"><div class="t">${esc(a.title)}</div><div class="small">практика навсегда</div></div><button class="buy" data-link="${esc(a.buy)}">${rub(a.price)}</button></div>`;
   return `<div class="item" data-audio="${esc(a.url)}"><button class="play" aria-label="слушать">${PLAY}</button>
-    <div class="meta"><div class="t">${esc(a.title)}</div><div class="small">${esc(a.sub || 'твоя навсегда')}</div><div class="bar"><i></i></div></div></div>`;
+    <div class="meta"><div class="t">${esc(a.title)}${mark ? `<span class="mark ${mark === 'подарок' ? 'soft' : ''}">${esc(mark)}</span>` : ''}</div><div class="small">${esc(a.sub || 'твоя навсегда')}</div><div class="bar"><i></i></div></div></div>`;
 }
 
 function render(d) {
@@ -219,10 +223,11 @@ function render(d) {
   let html = d.kurs ? kursBlock(d.kurs) : offerBlock(d.offer || []);
   const own = d.practices.filter(p => p.own), rest = d.practices.filter(p => !p.own);
   html += `<section><h2>Мои практики</h2><div class="list">`;
-  if (!own.length) html += `<div class="small">здесь появятся практики, которые ты заберёшь</div>`;
-  html += own.map(p => audioItem(p, true)).join('') + rest.map(p => audioItem(p, false)).join('');
+  html += own.length ? own.map(p => audioItem(p, true, 'куплено ✓')).join('')
+                     : `<div class="small">здесь появятся практики, которые ты заберёшь</div>`;
   html += `</div></section>`;
-  if (d.gifts.length) html += `<section><h2>Подарки</h2><div class="list">${d.gifts.map(g => audioItem(g, true)).join('')}</div></section>`;
+  if (rest.length) html += `<section><h2>Можно забрать</h2><div class="list">${rest.map(p => audioItem(p, false)).join('')}</div></section>`;
+  if (d.gifts.length) html += `<section><h2>Подарки</h2><div class="list">${d.gifts.map(g => audioItem(g, true, 'подарок')).join('')}</div></section>`;
   if (d.club) html += `<section><div class="card center"><div class="script">FEMININE CLUB</div><p class="small">ты внутри клуба</p><button class="btn" data-link="${esc(d.club.link)}">открыть клуб</button></div></section>`;
   html += `<footer><button class="btn ghost" data-link="${esc(d.dasha)}">написать Даше</button></footer>`;
   app.innerHTML = html;
