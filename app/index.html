@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Мой кабинет · Шкапуля</title>
+<meta name="robots" content="noindex">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prata&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #24080F;
+    --bg2: #2B0D14;
+    --card: #3D0B18;
+    --line: rgba(232, 201, 138, .18);
+    --gold: #E8C98A;
+    --gold2: #B8914F;
+    --cream: #F7EFE6;
+    --muted: rgba(247, 239, 230, .62);
+    --wine: #7E1428;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--cream); }
+  body {
+    font-family: 'Manrope', system-ui, sans-serif; font-size: 15px; line-height: 1.5;
+    background: radial-gradient(120% 60% at 50% -10%, #4a1020 0%, var(--bg) 60%) fixed;
+    min-height: 100vh; padding: 0 16px calc(32px + env(safe-area-inset-bottom));
+  }
+  .wrap { max-width: 520px; margin: 0 auto; }
+  header { padding: 28px 0 8px; text-align: center; }
+  .kicker { font-size: 11px; letter-spacing: .24em; text-transform: uppercase; color: var(--gold); }
+  h1 { font-family: 'Prata', serif; font-weight: 400; font-size: 30px; margin: 8px 0 4px; }
+  .hello { color: var(--muted); }
+  section { margin-top: 26px; }
+  h2 { font-family: 'Prata', serif; font-weight: 400; font-size: 21px; margin: 0 0 12px; }
+  .card {
+    background: linear-gradient(180deg, rgba(61, 11, 24, .92), rgba(43, 13, 20, .92));
+    border: 1px solid var(--line); border-radius: 18px; padding: 18px;
+  }
+  .pill {
+    display: inline-block; font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--bg); background: var(--gold); border-radius: 99px; padding: 4px 10px; font-weight: 600;
+  }
+  .progress { height: 6px; background: rgba(247, 239, 230, .1); border-radius: 99px; margin: 14px 0 8px; overflow: hidden; }
+  .progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold2), var(--gold)); border-radius: 99px; }
+  .small { font-size: 13px; color: var(--muted); }
+  .days { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+  .day { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: rgba(36, 8, 15, .55); }
+  .day-head { display: flex; align-items: center; gap: 12px; padding: 14px; cursor: pointer; }
+  .num {
+    flex: 0 0 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+    font-family: 'Prata', serif; border: 1px solid var(--gold2); color: var(--gold);
+  }
+  .day.done .num { background: var(--gold); color: var(--bg); border-color: var(--gold); }
+  .day.locked { opacity: .5; }
+  .day.locked .day-head { cursor: default; }
+  .day-title { flex: 1; font-weight: 500; }
+  .chev { color: var(--gold); transition: transform .2s; }
+  .day.openbox .chev { transform: rotate(90deg); }
+  .day-body { display: none; padding: 0 14px 16px; }
+  .day.openbox .day-body { display: block; }
+  .video { position: relative; padding-top: 56.25%; border-radius: 12px; overflow: hidden; background: #000; margin: 4px 0 12px; }
+  .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+    font: inherit; font-weight: 600; font-size: 15px; border-radius: 12px; padding: 13px 16px;
+    border: 1px solid var(--gold); background: var(--gold); color: var(--bg); cursor: pointer; text-decoration: none;
+  }
+  .btn.ghost { background: transparent; color: var(--gold); }
+  .btn:disabled { opacity: .6; }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+  .list { display: flex; flex-direction: column; gap: 10px; }
+  .item { display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: rgba(36, 8, 15, .55); }
+  .play {
+    flex: 0 0 42px; height: 42px; border-radius: 50%; border: 0; background: var(--gold); color: var(--bg);
+    display: grid; place-items: center; cursor: pointer;
+  }
+  .play svg { width: 16px; height: 16px; }
+  .item .meta { flex: 1; min-width: 0; }
+  .item .t { font-weight: 500; }
+  .bar { height: 3px; background: rgba(247, 239, 230, .12); border-radius: 99px; margin-top: 8px; overflow: hidden; display: none; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--gold); }
+  .item.playing .bar { display: block; }
+  .buy { font: inherit; font-size: 13px; font-weight: 600; color: var(--gold); background: none; border: 1px solid var(--gold2); border-radius: 99px; padding: 7px 12px; cursor: pointer; white-space: nowrap; }
+  .lock { flex: 0 0 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; color: var(--muted); }
+  .tariffs { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+  .tariff { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; }
+  .tariff b { font-family: 'Prata', serif; font-weight: 400; font-size: 18px; }
+  .center { text-align: center; }
+  .script { font-family: 'Prata', serif; color: var(--gold); font-size: 18px; }
+  .state { padding: 60px 10px; text-align: center; color: var(--muted); }
+  footer { margin-top: 30px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">та самая Шкапуля</div>
+    <h1>Мой кабинет</h1>
+    <div class="hello" id="hello"></div>
+  </header>
+  <main id="app"><div class="state">загружаю твой кабинет…</div></main>
+</div>
+
+<script>
+const API = 'https://200-165-230-69.sslip.io';
+const tg = window.Telegram && window.Telegram.WebApp;
+const app = document.getElementById('app');
+const PLAY = '<svg viewBox="0 0 16 16"><path fill="currentColor" d="M4 2.5v11l9-5.5z"/></svg>';
+const PAUSE = '<svg viewBox="0 0 16 16"><path fill="currentColor" d="M3.5 2h3v12h-3zM9.5 2h3v12h-3z"/></svg>';
+const LOCK = '<svg width="16" height="16" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.4" d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2M3.5 7h9v7h-9z"/></svg>';
+
+function esc(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function rub(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ₽'; }
+function openLink(url) {
+  if (!url) return;
+  if (tg && url.startsWith('https://t.me/')) { tg.openTelegramLink(url); tg.close && setTimeout(() => tg.close(), 300); }
+  else if (tg) tg.openLink(url);
+  else window.open(url, '_blank');
+}
+function whenText(ts) {
+  if (!ts) return '';
+  const d = new Date(ts * 1000);
+  const now = new Date();
+  const t = d.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'});
+  const same = d.toDateString() === now.toDateString();
+  const tomorrow = new Date(now.getTime() + 86400000).toDateString() === d.toDateString();
+  return (same ? 'сегодня' : tomorrow ? 'завтра' : d.toLocaleDateString('ru-RU', {day: 'numeric', month: 'long'})) + ' в ' + t;
+}
+
+async function api(path, opts = {}) {
+  const r = await fetch(API + path, Object.assign({}, opts, {
+    headers: Object.assign({'X-Init-Data': tg.initData, 'Content-Type': 'application/json'}, opts.headers || {})
+  }));
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+function kursBlock(k) {
+  const pct = Math.round(100 * k.days.filter(d => d.done).length / k.total);
+  let html = `<section><h2>Интенсив «Мне можно»</h2><div class="card">
+    <span class="pill">тариф «${esc(k.tariff)}»</span>
+    <div class="progress"><i style="width:${Math.max(pct, 2)}%"></i></div>
+    <div class="small">пройдено ${k.days.filter(d => d.done).length} из ${k.total} · открыто вечеров: ${k.day}${k.next_at ? ' · следующий ' + whenText(k.next_at) : ''}</div>
+    <div class="days">`;
+  for (const d of k.days) {
+    const cls = ['day', d.open ? '' : 'locked', d.done ? 'done' : ''].join(' ');
+    html += `<div class="${cls}" data-n="${d.n}">
+      <div class="day-head"><div class="num">${d.done ? '✓' : d.n}</div><div class="day-title">${esc(d.title)}</div>
+      <div class="chev">${d.open ? '›' : LOCK}</div></div>`;
+    if (d.open) {
+      html += `<div class="day-body"><p class="small" style="margin:0 0 10px">${esc(d.text)}</p>
+        ${d.embed ? `<div class="video"><iframe data-src="${esc(d.embed)}" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe></div>` : '<p class="small">видео скоро появится здесь</p>'}
+        <button class="btn ${d.done ? 'ghost' : ''}" data-done="${d.n}" ${d.done ? 'disabled' : ''}>${d.done ? 'пройдено 🤍' : 'отметить пройденным'}</button></div>`;
+    }
+    html += `</div>`;
+  }
+  html += `</div>`;
+  if (k.chat) html += `<div style="margin-top:14px"><button class="btn ghost" data-link="${esc(k.chat)}">чат участниц</button></div>`;
+  html += `</div></section>`;
+  if (k.upgrades && k.upgrades.length) {
+    html += `<section><h2>Хочешь больше поддержки?</h2><div class="card"><div class="small">можно перейти на тариф выше, уроки останутся на своём месте</div><div class="tariffs">`;
+    for (const u of k.upgrades) html += `<div class="tariff"><div><b>${esc(u.name)}</b><div class="small">${rub(u.price)}</div></div><button class="buy" data-link="${esc(u.link)}">перейти</button></div>`;
+    html += `</div></div></section>`;
+  }
+  return html;
+}
+
+function offerBlock(list) {
+  let html = `<section><h2>Интенсив «Мне можно»</h2><div class="card">
+    <div class="small">7 вечеров: 4 видеоурока и 3 практики, каждый вечер новый шаг. всё остаётся у тебя навсегда</div><div class="tariffs">`;
+  for (const t of list) html += `<div class="tariff"><div><b>${esc(t.name)}</b><div class="small">${rub(t.price)}</div></div><button class="buy" data-link="${esc(t.link)}">выбрать</button></div>`;
+  return html + `</div></div></section>`;
+}
+
+function audioItem(a, own) {
+  if (!own) return `<div class="item"><div class="lock">${LOCK}</div><div class="meta"><div class="t">${esc(a.title)}</div><div class="small">практика навсегда</div></div><button class="buy" data-link="${esc(a.buy)}">${rub(a.price)}</button></div>`;
+  return `<div class="item" data-audio="${esc(a.url)}"><button class="play" aria-label="слушать">${PLAY}</button>
+    <div class="meta"><div class="t">${esc(a.title)}</div><div class="small">${esc(a.sub || 'твоя навсегда')}</div><div class="bar"><i></i></div></div></div>`;
+}
+
+function render(d) {
+  document.getElementById('hello').textContent = d.name ? `привет, ${d.name} 🤍` : 'привет 🤍';
+  let html = d.kurs ? kursBlock(d.kurs) : offerBlock(d.offer || []);
+  const own = d.practices.filter(p => p.own), rest = d.practices.filter(p => !p.own);
+  html += `<section><h2>Мои практики</h2><div class="list">`;
+  if (!own.length) html += `<div class="small">здесь появятся практики, которые ты заберёшь</div>`;
+  html += own.map(p => audioItem(p, true)).join('') + rest.map(p => audioItem(p, false)).join('');
+  html += `</div></section>`;
+  if (d.gifts.length) html += `<section><h2>Подарки</h2><div class="list">${d.gifts.map(g => audioItem(g, true)).join('')}</div></section>`;
+  if (d.club) html += `<section><div class="card center"><div class="script">FEMININE CLUB</div><p class="small">ты внутри клуба</p><button class="btn" data-link="${esc(d.club.link)}">открыть клуб</button></div></section>`;
+  html += `<footer><button class="btn ghost" data-link="${esc(d.dasha)}">написать Даше</button></footer>`;
+  app.innerHTML = html;
+}
+
+let player = null, playingEl = null;
+function stopAudio() {
+  if (player) { player.pause(); }
+  if (playingEl) { playingEl.classList.remove('playing'); playingEl.querySelector('.play').innerHTML = PLAY; }
+}
+app.addEventListener('click', async (e) => {
+  const link = e.target.closest('[data-link]');
+  if (link) { openLink(link.dataset.link); return; }
+  const doneBtn = e.target.closest('[data-done]');
+  if (doneBtn) {
+    doneBtn.disabled = true;
+    try {
+      await api('/api/done', {method: 'POST', body: JSON.stringify({n: +doneBtn.dataset.done})});
+      tg.HapticFeedback && tg.HapticFeedback.notificationOccurred('success');
+      load();
+    } catch (err) { doneBtn.disabled = false; }
+    return;
+  }
+  const play = e.target.closest('.play');
+  if (play) {
+    const item = play.closest('[data-audio]');
+    if (playingEl === item && player && !player.paused) { stopAudio(); return; }
+    stopAudio();
+    if (!player || player.src !== item.dataset.audio) {
+      player = new Audio(item.dataset.audio);
+      player.ontimeupdate = () => { if (playingEl && player.duration) playingEl.querySelector('.bar i').style.width = (100 * player.currentTime / player.duration) + '%'; };
+      player.onended = stopAudio;
+    }
+    playingEl = item;
+    item.classList.add('playing');
+    play.innerHTML = PAUSE;
+    player.play().catch(stopAudio);
+    return;
+  }
+  const head = e.target.closest('.day:not(.locked) .day-head');
+  if (head) {
+    const day = head.parentElement;
+    day.classList.toggle('openbox');
+    const fr = day.querySelector('iframe[data-src]');
+    if (fr && !fr.src) fr.src = fr.dataset.src;
+  }
+});
+
+async function load() {
+  try {
+    render(await api('/api/me'));
+  } catch (err) {
+    app.innerHTML = `<div class="state">не получилось открыть кабинет 🤍<br>закрой его и открой снова из бота</div>`;
+  }
+}
+
+if (!tg || !tg.initData) {
+  app.innerHTML = `<div class="state"><p>кабинет открывается внутри Telegram 🤍</p>
+    <p><a class="btn" href="https://t.me/shkapulyaa_bot">открыть бота</a></p></div>`;
+} else {
+  tg.ready(); tg.expand();
+  try { tg.setHeaderColor('#24080F'); tg.setBackgroundColor('#24080F'); } catch (e) {}
+  load();
+}
+</script>
+</body>
+</html>
