@@ -108,6 +108,14 @@
   .item .t { font-weight: 500; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .mark { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; border-radius: 99px; padding: 2px 8px; background: var(--gold); color: var(--bg); }
   .mark.soft { background: transparent; color: var(--gold); border: 1px solid var(--gold2); }
+  .pace { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .pace-t { font-size: 13px; color: var(--muted); }
+  .pace-opt { display: block; width: 100%; text-align: left; font: inherit; color: var(--cream); padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(36, 8, 15, .5); cursor: pointer; }
+  .pace-opt.on { border-color: var(--gold); background: rgba(232, 201, 138, .07); cursor: default; }
+  .pace-opt b { display: block; font-weight: 600; font-size: 14px; }
+  .pace-opt.on b { color: var(--gold); }
+  .pace-opt span { display: block; font-size: 12px; color: var(--muted); }
+  .pace-opt:disabled { opacity: .6; }
   .tariff.mine { border-color: var(--gold); background: rgba(232, 201, 138, .06); }
   .bar { height: 3px; background: rgba(247, 239, 230, .12); border-radius: 99px; margin-top: 8px; overflow: hidden; display: none; }
   .bar i { display: block; height: 100%; width: 0; background: var(--gold); }
@@ -172,7 +180,12 @@ function kursBlock(k) {
   let html = `<section><h2>Интенсив «Мне можно»</h2><div class="card">
     <span class="pill">тариф «${esc(k.tariff)}»</span>
     <div class="progress"><i style="width:${Math.max(pct, 2)}%"></i></div>
-    <div class="small">пройдено ${k.days.filter(d => d.done).length} из ${k.total} · открыто вечеров: ${k.day}${k.next_at ? ' · следующий ' + whenText(k.next_at) : ''}</div>
+    <div class="small">пройдено ${k.days.filter(d => d.done).length} из ${k.total} · открыто вечеров: ${k.day}${k.next_at && k.day < k.total ? ' · следующий ' + whenText(k.next_at) : ''}</div>
+    ${k.day < k.total ? `<div class="pace">
+      <div class="pace-t">Как тебе удобнее проходить?</div>
+      <div class="pace-opt on"><b>По программе ✓</b><span>новый вечер каждый день в 19:00 по Москве, я напомню</span></div>
+      <button class="pace-opt" data-openall="1"><b>Открыть все уроки сейчас</b><span>все ${k.total} вечеров сразу, проходишь в своём темпе</span></button>
+    </div>` : ''}
     <div class="days">`;
   const freshN = k.days.filter(d => d.open && !d.done).map(d => d.n).pop();
   for (const d of k.days) {
@@ -241,6 +254,18 @@ function stopAudio() {
 app.addEventListener('click', async (e) => {
   const link = e.target.closest('[data-link]');
   if (link) { openLink(link.dataset.link); return; }
+  const allBtn = e.target.closest('[data-openall]');
+  if (allBtn) {
+    const go = () => {
+      allBtn.disabled = true;
+      api('/api/open_all', {method: 'POST', body: '{}'})
+        .then(() => { tg.HapticFeedback && tg.HapticFeedback.notificationOccurred('success'); load(); })
+        .catch(() => { allBtn.disabled = false; });
+    };
+    const q = 'Открыть все вечера интенсива сейчас? Вечерние напоминания тогда больше не придут';
+    if (tg.showConfirm) tg.showConfirm(q, ok => ok && go()); else if (confirm(q)) go();
+    return;
+  }
   const doneBtn = e.target.closest('[data-done]');
   if (doneBtn) {
     doneBtn.disabled = true;
