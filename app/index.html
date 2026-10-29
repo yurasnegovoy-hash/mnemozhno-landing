@@ -75,6 +75,8 @@
     backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   }
   .badge .ic svg { width: 20px; height: 20px; }
+  .badge.corner { left: auto; top: auto; right: 12px; bottom: 12px; transform: none; }
+  .badge.corner .ic { width: 46px; height: 46px; background: rgba(232, 201, 138, .92); color: var(--bg); border: 0; }
   .day.openbox .cover { display: none; }
   .day.fresh { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(232, 201, 138, .35), 0 10px 30px rgba(0, 0, 0, .35); }
   .tag-new {
@@ -194,7 +196,7 @@ function kursBlock(k) {
     html += `<div class="${cls}" id="d${d.n}" data-n="${d.n}">
       <div class="cover"><div class="ph"><b>${d.n}</b><span>вечер ${d.n} из ${k.total}</span></div><img src="${esc(d.img)}" alt="" loading="lazy" onerror="this.remove()">
         ${d.open
-          ? `<div class="badge"><div class="ic">${PLAY}</div></div>${d.n === freshN ? '<span class="tag-new">новый урок</span>' : ''}`
+          ? `<div class="badge corner"><div class="ic">${PLAY}</div></div>${d.n === freshN ? '<span class="tag-new">новый урок</span>' : ''}`
           : `<div class="badge"><div class="ic">${LOCK}</div>${esc(lockText)}</div>`}
       </div>
       <div class="day-head"><div class="num">${d.done ? '✓' : d.n}</div><div class="day-title">${esc(d.title)}</div>
