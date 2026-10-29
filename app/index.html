@@ -209,6 +209,7 @@ function kursBlock(k) {
     html += `</div>`;
   }
   html += `</div>`;
+  if (k.tetrad) html += `<div style="margin-top:14px"><button class="btn" data-link="${esc(k.tetrad)}">скачать рабочую тетрадь · PDF</button></div>`;
   if (k.chat || k.channel) html += `<div class="row" style="margin-top:14px">${k.channel ? `<button class="btn ghost" data-link="${esc(k.channel)}">канал курса</button>` : ''}${k.chat ? `<button class="btn ghost" data-link="${esc(k.chat)}">чат участниц</button>` : ''}</div>`;
   html += `</div></section>`;
   if (k.upgrades && k.upgrades.length) {
@@ -222,7 +223,7 @@ function kursBlock(k) {
 
 function offerBlock(list) {
   let html = `<section><h2>Интенсив «Мне можно»</h2><div class="card">
-    <div class="small">7 вечеров: 4 видеоурока и 3 практики, каждый вечер новый шаг. всё остаётся у тебя навсегда</div><div class="tariffs">`;
+    <div class="small">7 вечеров: 4 видеоурока, 3 практики и рабочая тетрадь, каждый вечер новый шаг. всё остаётся у тебя навсегда</div><div class="tariffs">`;
   for (const t of list) html += `<div class="tariff"><div><b>${esc(t.name)}</b><div class="small">${rub(t.price)}</div></div><button class="buy" data-link="${esc(t.link)}">выбрать</button></div>`;
   return html + `</div></div></section>`;
 }
