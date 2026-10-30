@@ -50,6 +50,10 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .err { margin-top: 16px; padding: 14px; border-radius: 14px; border: 1px solid rgba(232, 120, 120, .4); color: var(--cream); font-size: 14px; display: none; }
   .err a { color: var(--gold); }
+  .mail { margin-bottom: 18px; }
+  .mail input { width: 100%; font: inherit; font-size: 16px; color: var(--cream); background: rgba(255,255,255,.04); border: 1px solid var(--gold2, rgba(232,201,138,.5)); border-radius: 14px; padding: 14px; outline: none; }
+  .mail input.bad { border-color: rgba(232, 120, 120, .8); }
+  .mail span { display: block; margin-top: 6px; color: var(--muted); font-size: 12px; }
   .safe { margin-top: 26px; text-align: center; color: var(--muted); font-size: 12px; }
   .state { padding: 70px 10px; text-align: center; color: var(--muted); }
   .state a { color: var(--gold); }
@@ -72,6 +76,7 @@ let info = null;
 function render() {
   app.innerHTML = `<header><div class="kicker">та самая Шкапуля</div><h1>${esc(info.title)}</h1>
       <div class="price">${esc(info.price)}</div>${info.upgrade ? '<p class="note">доплата разницы между тарифами, уроки и прогресс остаются</p>' : info.discount ? '<p class="note">твоя персональная цена</p>' : ''}</header>
+    ${info.need_email ? '<div class="mail"><input id="email" type="email" inputmode="email" autocomplete="email" placeholder="твоя почта"><span>на неё lava пришлёт чек</span></div>' : ''}
     <h2>Как удобнее оплатить</h2>
     <div class="methods">${info.methods.map(m => `<button class="m" data-m="${m.id}"><div class="ic">${ICONS[m.id] || ''}</div>
       <div><b>${esc(m.name)}</b><span>${esc(m.sub)}</span></div><div class="arr">›</div></button>`).join('')}</div>
@@ -86,16 +91,25 @@ function showErr(text) {
 app.addEventListener('click', async (ev) => {
   const b = ev.target.closest('[data-m]');
   if (!b) return;
+  const mailEl = document.getElementById('email');
+  const email = mailEl ? mailEl.value.trim() : '';
+  if (mailEl && !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) {
+    mailEl.classList.add('bad'); mailEl.focus();
+    showErr('напиши почту 🤍 на неё придёт чек об оплате');
+    return;
+  }
+  if (mailEl) mailEl.classList.remove('bad');
   document.querySelectorAll('.m').forEach(x => x.classList.remove('busy'));
   b.classList.add('busy');
   b.querySelector('.arr').textContent = '◌';
   const sub = b.querySelector('span'), subText = sub.textContent;
   sub.textContent = 'открываю оплату, пару секунд…';
   try {
-    const r = await fetch(API + '/api/pay', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({t, method: b.dataset.m})});
+    const r = await fetch(API + '/api/pay', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({t, method: b.dataset.m, email})});
     const d = await r.json();
     if (d.url) { location.href = d.url; return; }
     showErr(d.error === 'owned' ? 'это у тебя уже есть 🤍 загляни в бота' :
+            d.error === 'email' ? 'проверь почту 🤍 кажется, в ней опечатка' :
             d.error === 'link' ? 'ссылка устарела 🤍 нажми «оплатить» в боте ещё раз' :
             'не получилось открыть оплату этим способом 🤍 попробуй другой или напиши мне');
   } catch (e) {

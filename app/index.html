@@ -221,11 +221,13 @@ function kursBlock(k) {
   return html;
 }
 
+const TARIFF_SUB = {kurs_sama: 'уроки и практики в своём темпе', kurs_vmeste: 'плюс чат участниц, Даша на связи каждый вечер', kurs_dasha: 'плюс личный чат с Дашей и сессия 90 минут'};
 function offerBlock(list) {
   let html = `<section><h2>Интенсив «Мне можно»</h2><div class="card">
-    <div class="small">7 вечеров: 4 видеоурока, 3 практики и рабочая тетрадь, каждый вечер новый шаг. всё остаётся у тебя навсегда</div><div class="tariffs">`;
-  for (const t of list) html += `<div class="tariff"><div><b>${esc(t.name)}</b><div class="small">${rub(t.price)}</div></div><button class="buy" data-link="${esc(t.link)}">выбрать</button></div>`;
-  return html + `</div></div></section>`;
+    <div class="small">7 вечеров, чтобы перестать заслуживать любовь и начать давать её себе: 4 видеоурока, 3 практики и рабочая тетрадь. всё остаётся у тебя навсегда</div><div class="tariffs">`;
+  for (const t of list) html += `<div class="tariff"><div><b>${esc(t.name)}</b><div class="small">${rub(t.price)} · ${esc(TARIFF_SUB[t.key] || '')}</div></div><button class="buy" data-pay="${esc(t.key)}" data-fallback="${esc(t.link)}">выбрать</button></div>`;
+  html += `</div><div style="margin-top:14px"><button class="btn ghost" data-site="1">вся программа интенсива</button></div>`;
+  return html + `</div></section>`;
 }
 
 function audioItem(a, own, mark) {
@@ -262,6 +264,19 @@ function stopAudio() {
 app.addEventListener('click', async (e) => {
   const link = e.target.closest('[data-link]');
   if (link) { openLink(link.dataset.link); return; }
+  const site = e.target.closest('[data-site]');
+  if (site) { location.href = 'https://shkapulya.ru/?utm_source=bot&utm_medium=app'; return; }
+  const pay = e.target.closest('[data-pay]');
+  if (pay) {
+    pay.disabled = true; pay.textContent = '◌';
+    try {
+      const d = await api('/api/kurs_link', {method: 'POST', body: JSON.stringify({product: pay.dataset.pay, from: 'app'})});
+      if (d.url) { location.href = d.url; return; }
+      openLink(d.bot || pay.dataset.fallback);
+    } catch (err) { openLink(pay.dataset.fallback); }
+    pay.disabled = false; pay.textContent = 'выбрать';
+    return;
+  }
   const go = e.target.closest('[data-goday]');
   if (go) {
     const day = document.getElementById('d' + go.dataset.goday);
