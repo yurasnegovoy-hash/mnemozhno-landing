@@ -5,6 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Мой кабинет · Шкапуля</title>
 <meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#2a0d13">
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+m[i].l=1*new Date();for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=113916832', 'ym');
+ym(113916832, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/113916832" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prata&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
@@ -357,6 +373,19 @@ if (!tg || !tg.initData) {
   try { tg.setHeaderColor('#24080F'); tg.setBackgroundColor('#24080F'); } catch (e) {}
   load();
 }
+</script>
+<script>
+(function () {
+  function goal(n, p) { try { if (window.ym) ym(113916832, 'reachGoal', n, p || {}); } catch (e) {} }
+  goal('app_open');
+  document.addEventListener('click', function (ev) {
+    var t = ev.target.closest && ev.target.closest('[data-pay],[data-site],[data-link]');
+    if (!t) return;
+    if (t.dataset.pay) goal('app_tariff_' + t.dataset.pay);
+    else if (t.dataset.site) goal('app_site');
+    else if (t.dataset.link) goal('app_link', {href: t.dataset.link});
+  }, true);
+})();
 </script>
 </body>
 </html>
